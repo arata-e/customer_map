@@ -48,7 +48,7 @@ export const useBitrix24 = () => {
       let start = 0
       let i = 0
 
-      do {
+      
         const params = {
           entityTypeId: SMART_PROCESS_ID,
           select: ['*', 'UF_*'],
@@ -56,13 +56,15 @@ export const useBitrix24 = () => {
           start: start
         }
 
-        const result = await b24Instance.callMethod('crm.item.list', params)
-        console.log('Polygon result:', result)
+        let result = await b24Instance.callMethod('crm.item.list', params)
         const items = result._data?.result?.items || []
         allItems = allItems.concat(items)
 
         start = result._data?.next || 0
         console.log('Polygon next:', start)
+      do {
+        console.log('Polygon result:', result.isMore())
+         result = await result.getNext()
         i= i +1
       } while (i < 3)
 
