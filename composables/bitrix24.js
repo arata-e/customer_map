@@ -61,7 +61,7 @@ export const useBitrix24 = () => {
         allItems = allItems.concat(items)
 
         start = result._data?.next || 0
-        console.log('Start :' start)
+        console.log('Polygon result:', start)
 //      } while (start !== 0)
 
       return allItems
