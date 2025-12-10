@@ -67,8 +67,8 @@ async function initializeMap(geoSearchModules) {
   if (!mapElement.value || !L) return
 
   map = L.map(mapElement.value, {
-    center: [55.7558, 37.6173],
-    zoom: 13
+    center: [55.80205657605603, 37.75009144921874],
+    zoom: 9
   })
 
   map.on('contextmenu', (e) => {
