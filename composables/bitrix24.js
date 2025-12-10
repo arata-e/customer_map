@@ -63,7 +63,7 @@ export const useBitrix24 = () => {
           }
         }, true);
       const data = batch.getData()
-      console.log(result)
+      console.log(data)
       return []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
