@@ -39,10 +39,10 @@ onMounted(async () => {
     }
 
     loadingMessage.value = 'Загрузка карты...'
-    await loadLeaflet()
+    const geoSearchModules = await loadLeaflet()
 
     loadingMessage.value = 'Настройка карты...'
-    await initializeMap()
+    await initializeMap(geoSearchModules)
 
     mapReady.value = true
   } catch (error) {
@@ -56,10 +56,13 @@ async function loadLeaflet() {
     L = await import('leaflet')
     await import('leaflet.markercluster')
     await import('@geoman-io/leaflet-geoman-free')
+    const { GeoSearchControl, OpenStreetMapProvider } = await import('leaflet-geosearch')
+    return { GeoSearchControl, OpenStreetMapProvider }
   }
+  return null
 }
 
-async function initializeMap() {
+async function initializeMap(geoSearchModules) {
   if (!mapElement.value || !L) return
 
   map = L.map(mapElement.value, {
@@ -112,6 +115,25 @@ async function initializeMap() {
   }
 
   L.control.layers(baseLayers).addTo(map)
+
+  if (geoSearchModules) {
+    const { GeoSearchControl, OpenStreetMapProvider } = geoSearchModules
+    const provider = new OpenStreetMapProvider()
+
+    const searchControl = new GeoSearchControl({
+      provider: provider,
+      style: 'bar',
+      showMarker: true,
+      showPopup: false,
+      autoClose: true,
+      retainZoomLevel: false,
+      animateZoom: true,
+      keepResult: false,
+      searchLabel: 'Введите адрес'
+    })
+
+    map.addControl(searchControl)
+  }
 
   map.pm.addControls({
     position: 'topleft',
@@ -181,6 +203,10 @@ onUnmounted(() => {
   }
 })
 </script>
+
+<style>
+@import 'leaflet-geosearch/dist/geosearch.css';
+</style>
 
 <style scoped>
 .map-container {
