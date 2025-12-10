@@ -34,5 +34,6 @@ export { useBitrix24 } from '../composables/bitrix24';
 export { useCustomers } from '../composables/customers';
 export { useUsersideApi } from '../composables/us-api';
 export { useUtm5Api } from '../composables/utm5-api';
+export { DaDataProvider, DaDataProvider } from '../utils/dadata-provider';
 export { YandexProvider, YandexProvider } from '../utils/yandex-provider';
 export { useNuxtDevTools } from '../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools';
