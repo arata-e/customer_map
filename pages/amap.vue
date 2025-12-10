@@ -56,8 +56,9 @@ async function loadLeaflet() {
     L = await import('leaflet')
     await import('leaflet.markercluster')
     await import('@geoman-io/leaflet-geoman-free')
-    const { GeoSearchControl, OpenStreetMapProvider } = await import('leaflet-geosearch')
-    return { GeoSearchControl, OpenStreetMapProvider }
+    const { GeoSearchControl } = await import('leaflet-geosearch')
+    const { YandexProvider } = await import('~/utils/yandex-provider')
+    return { GeoSearchControl, YandexProvider }
   }
   return null
 }
@@ -117,8 +118,22 @@ async function initializeMap(geoSearchModules) {
   L.control.layers(baseLayers).addTo(map)
 
   if (geoSearchModules) {
-    const { GeoSearchControl, OpenStreetMapProvider } = geoSearchModules
-    const provider = new OpenStreetMapProvider()
+    const { GeoSearchControl, YandexProvider } = geoSearchModules
+
+    await new Promise((resolve) => {
+      if (window.ymaps?.ready) {
+        window.ymaps.ready(resolve)
+      } else {
+        const checkYmaps = setInterval(() => {
+          if (window.ymaps?.ready) {
+            clearInterval(checkYmaps)
+            window.ymaps.ready(resolve)
+          }
+        }, 100)
+      }
+    })
+
+    const provider = new YandexProvider()
 
     const searchControl = new GeoSearchControl({
       provider: provider,
