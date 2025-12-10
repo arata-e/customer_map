@@ -40,8 +40,7 @@ export const useBitrix24 = () => {
     try {
       const params = {
         entityTypeId: SMART_PROCESS_ID,
-        select: ['*', 'UF_*'],
-        filter: typeId ? { categoryId: typeId } : {}
+        filter: { categoryId: 61 }
       }
 
       const result = await b24Instance.callMethod('crm.item.list', params)
