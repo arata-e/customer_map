@@ -44,13 +44,12 @@ export const useBitrix24 = () => {
 
   const getPolygons = async (b24Instance) => {
     try {
-        res = $b24.callBatch({
+        res = b24Instance.callBatch({
           PoligonList: {
             method: 'crm.item.list',
             params: {
               entityTypeId: SMART_PROCESS_ID,
     		  filter: { categoryId: POLYGON_TYPE_ID }
-              order: { id: 'desc' },
             }
           }
         }, true);
