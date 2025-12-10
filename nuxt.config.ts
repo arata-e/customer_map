@@ -39,6 +39,12 @@ export default defineNuxtConfig({
           rel: 'stylesheet',
           href: 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css'
         }
+      ],
+      script: [
+        {
+          src: 'https://api-maps.yandex.ru/2.1/?apikey=1f6d5ddd-ba57-40aa-8835-906be57a8596&lang=ru_RU',
+          type: 'text/javascript'
+        }
       ]
     }
   },
