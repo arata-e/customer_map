@@ -17,7 +17,7 @@ export const useBitrix24 = () => {
         }
 
         const result = await b24Instance.callMethod('crm.item.list', params)
-        const items = result.data?.result?.items || []
+        const items = result._data?.result?.items || []
         allItems = allItems.concat(items)
 
         start = result.data?.next || 0
