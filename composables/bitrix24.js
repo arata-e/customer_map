@@ -20,7 +20,7 @@ export const useBitrix24 = () => {
         const items = result._data?.result?.items || []
         allItems = allItems.concat(items)
 
-        start = result.data?.next || 0
+        start = result._data?.next || 0
       } while (start !== 0)
 
       return allItems
