@@ -1,10 +1,5 @@
 import {
-  B24Frame,
-  EnumCrmEntityTypeId,
-  Text,
-  LoggerBrowser,
-  Result,
-  type ISODate
+  Result
 } from '@bitrix24/b24jssdk'
 
 export const useBitrix24 = () => {
