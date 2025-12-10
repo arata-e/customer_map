@@ -55,6 +55,11 @@ export default defineNuxtConfig({
     },
     optimizeDeps: {
       include: ['leaflet']
-    }
+    },
+    server: {
+      allowedHosts: [
+        'web.example.test',
+      ]
+    }    
   }
 })
