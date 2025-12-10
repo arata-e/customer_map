@@ -44,7 +44,7 @@ export const useBitrix24 = () => {
 
   const getPolygons = async (b24Instance) => {
     try {
-        res = await b24Instance.callBatch({
+        const result = await b24Instance.callBatch({
           PoligonList: {
             method: 'crm.item.list',
             params: {
@@ -53,7 +53,7 @@ export const useBitrix24 = () => {
             }
           }
         }, true);
-      console.log(res)
+      console.log(result)
       return []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
