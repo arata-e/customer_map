@@ -85,10 +85,33 @@ async function initializeMap() {
       .openOn(map)
   })
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  const googleStreet = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+    attribution: '&copy; Google',
+    maxZoom: 20,
+    pmIgnore: true
+  })
+
+  const googleHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    attribution: '&copy; Google',
+    maxZoom: 20,
+    pmIgnore: true
+  })
+
+  const openStreetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19
-  }).addTo(map)
+    maxZoom: 19,
+    pmIgnore: true
+  })
+
+  openStreetMap.addTo(map)
+
+  const baseLayers = {
+    'Google Street': googleStreet,
+    'Google Hybrid': googleHybrid,
+    'OpenStreetMap': openStreetMap
+  }
+
+  L.control.layers(baseLayers).addTo(map)
 
   map.pm.addControls({
     position: 'topleft',
