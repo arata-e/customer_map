@@ -1,9 +1,6 @@
 export const useUsersideApi = () => {
-  const apiBaseUrl = ref('')
-
-  const setApiUrl = (url) => {
-    apiBaseUrl.value = url
-  }
+  const config = useRuntimeConfig()
+  const apiBaseUrl = config.public.usBaseUrl || import.meta.env.VITE_US_BASE_URL
 
   const callApi = async (endpoint, auth, params = {}) => {
     try {
@@ -12,7 +9,7 @@ export const useUsersideApi = () => {
         ...params
       }
 
-      const response = await fetch(`${apiBaseUrl.value}${endpoint}`, {
+      const response = await fetch(`${apiBaseUrl}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -75,7 +72,6 @@ export const useUsersideApi = () => {
   }
 
   return {
-    setApiUrl,
     callApi,
     getNodes,
     getNode,

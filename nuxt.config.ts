@@ -6,6 +6,13 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
+  runtimeConfig: {
+    public: {
+      utm5BaseUrl: process.env.VITE_UTM5_BASE_URL || '',
+      usBaseUrl: process.env.VITE_US_BASE_URL || ''
+    }
+  },
+
   app: {
     head: {
       title: 'Bitrix24 Map Widget',
