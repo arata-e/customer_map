@@ -52,7 +52,7 @@ export const useBitrix24 = () => {
           "entityTypeId": SMART_PROCESS_ID,
           "filter": { "categoryId": POLYGON_TYPE_ID }
         }
-      for await (const chunk of b24Instance.fetchListMethod('crm.item.list', params,'id')) {
+      for await (const chunk of b24Instance.fetchListMethod('crm.item.list', params,'id','items')) {
         console.log('chunk size', chunk)
       }
       return []
