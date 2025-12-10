@@ -44,7 +44,7 @@ export const useBitrix24 = () => {
 
   const getPolygons = async (b24Instance) => {
     try {
-        res = b24Instance.callBatch({
+        res = await b24Instance.callBatch({
           PoligonList: {
             method: 'crm.item.list',
             params: {
