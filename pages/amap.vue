@@ -43,7 +43,6 @@ async function loadLeaflet() {
     L = await import('leaflet')
     await import('leaflet.markercluster')
     await import('@geoman-io/leaflet-geoman-free')
-    await import('leaflet-contextmenu')
   }
 }
 
@@ -52,19 +51,25 @@ async function initializeMap() {
 
   map = L.map(mapElement.value, {
     center: [55.7558, 37.6173],
-    zoom: 13,
-    contextmenu: true,
-    contextmenuWidth: 200,
-    contextmenuItems: [
-      {
-        text: 'Создать точку',
-        callback: createPoint
-      },
-      {
-        text: 'Создать полигон',
-        callback: createPolygon
-      }
-    ]
+    zoom: 13
+  })
+
+  map.on('contextmenu', (e) => {
+    L.popup()
+      .setLatLng(e.latlng)
+      .setContent(`
+        <div style="text-align: center;">
+          <button onclick="window.createPointAtLocation(${e.latlng.lat}, ${e.latlng.lng})"
+                  style="display: block; width: 100%; margin-bottom: 8px; padding: 8px; cursor: pointer;">
+            Создать точку
+          </button>
+          <button onclick="window.createPolygonAtLocation(${e.latlng.lat}, ${e.latlng.lng})"
+                  style="display: block; width: 100%; padding: 8px; cursor: pointer;">
+            Создать полигон
+          </button>
+        </div>
+      `)
+      .openOn(map)
   })
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -103,12 +108,16 @@ function setupMapEvents() {
   })
 }
 
-function createPoint(e) {
-  console.log('Создать точку в координатах:', e.latlng)
-}
+if (process.client) {
+  window.createPointAtLocation = (lat, lng) => {
+    console.log('Создать точку в координатах:', lat, lng)
+    if (map) map.closePopup()
+  }
 
-function createPolygon(e) {
-  console.log('Создать полигон от координат:', e.latlng)
+  window.createPolygonAtLocation = (lat, lng) => {
+    console.log('Создать полигон от координат:', lat, lng)
+    if (map) map.closePopup()
+  }
 }
 
 function getB24AuthData() {

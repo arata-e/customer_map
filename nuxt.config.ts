@@ -31,10 +31,6 @@ export default defineNuxtConfig({
         {
           rel: 'stylesheet',
           href: 'https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css'
-        },
-        {
-          rel: 'stylesheet',
-          href: 'https://unpkg.com/leaflet-contextmenu@1.5.1/dist/leaflet.contextmenu.css'
         }
       ]
     }
