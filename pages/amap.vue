@@ -5,19 +5,27 @@
       <p>{{ loadingMessage }}</p>
     </div>
     <div id="map" ref="mapElement" :style="{ opacity: mapReady ? 1 : 0 }"></div>
+    <AddressSearch
+      v-if="mapReady"
+      :dadata-token="dadataToken"
+      @address-selected="onAddressSelected"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import AddressSearch from '~/components/AddressSearch.vue'
 
 const mapElement = ref(null)
 const mapReady = ref(false)
 const loadingMessage = ref('Инициализация...')
+const dadataToken = import.meta.env.VITE_DADATA_TOKEN
 
 let b24Instance = null
 let map = null
 let L = null
+let searchMarker = null
 
 onMounted(async () => {
   try {
@@ -56,10 +64,6 @@ async function loadLeaflet() {
     L = await import('leaflet')
     await import('leaflet.markercluster')
     await import('@geoman-io/leaflet-geoman-free')
-    const { GeoSearchControl } = await import('leaflet-geosearch')
-    const { YandexProvider } = await import('~/utils/yandex-provider')
-    const { DaDataProvider } = await import('~/utils/dadata-provider')
-    return { GeoSearchControl, YandexProvider, DaDataProvider }
   }
   return null
 }
@@ -118,42 +122,6 @@ async function initializeMap(geoSearchModules) {
 
   L.control.layers(baseLayers).addTo(map)
 
-  if (geoSearchModules) {
-    const { GeoSearchControl, YandexProvider, DaDataProvider } = geoSearchModules
-
-    await new Promise((resolve) => {
-      if (window.ymaps?.ready) {
-        window.ymaps.ready(resolve)
-      } else {
-        const checkYmaps = setInterval(() => {
-          if (window.ymaps?.ready) {
-            clearInterval(checkYmaps)
-            window.ymaps.ready(resolve)
-          }
-        }, 100)
-      }
-    })
-
-    const dadataToken = import.meta.env.VITE_DADATA_TOKEN
-    const yandexProvider = new YandexProvider()
-    const dadataProvider = new DaDataProvider(dadataToken)
-
-    const searchControl = new GeoSearchControl({
-      provider: yandexProvider,
-      style: 'bar',
-      showMarker: true,
-      showPopup: false,
-      autoClose: true,
-      retainZoomLevel: false,
-      animateZoom: true,
-      keepResult: false,
-      searchLabel: 'Введите адрес',
-      autoCompleteDelay: 250
-    })
-
-    map.addControl(searchControl)
-  }
-
   map.pm.addControls({
     position: 'topleft',
     drawMarker: true,
@@ -185,6 +153,23 @@ function setupMapEvents() {
   })
 }
 
+function onAddressSelected(addressData) {
+  if (!map || !L) return
+
+  if (searchMarker) {
+    map.removeLayer(searchMarker)
+  }
+
+  const { lat, lng, label } = addressData
+
+  searchMarker = L.marker([lat, lng]).addTo(map)
+  searchMarker.bindPopup(label).openPopup()
+
+  map.setView([lat, lng], 16, {
+    animate: true
+  })
+}
+
 if (process.client) {
   window.createPointAtLocation = (lat, lng) => {
     console.log('Создать точку в координатах:', lat, lng)
@@ -211,6 +196,11 @@ function getB24AuthData() {
 }
 
 onUnmounted(() => {
+  if (searchMarker && map) {
+    map.removeLayer(searchMarker)
+    searchMarker = null
+  }
+
   if (map) {
     map.remove()
     map = null
@@ -222,10 +212,6 @@ onUnmounted(() => {
   }
 })
 </script>
-
-<style>
-@import 'leaflet-geosearch/dist/geosearch.css';
-</style>
 
 <style scoped>
 .map-container {
