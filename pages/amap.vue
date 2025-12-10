@@ -57,8 +57,9 @@ async function loadLeaflet() {
     await import('leaflet.markercluster')
     await import('@geoman-io/leaflet-geoman-free')
     const { GeoSearchControl } = await import('leaflet-geosearch')
+    const { YandexProvider } = await import('~/utils/yandex-provider')
     const { DaDataProvider } = await import('~/utils/dadata-provider')
-    return { GeoSearchControl, DaDataProvider }
+    return { GeoSearchControl, YandexProvider, DaDataProvider }
   }
   return null
 }
@@ -118,13 +119,27 @@ async function initializeMap(geoSearchModules) {
   L.control.layers(baseLayers).addTo(map)
 
   if (geoSearchModules) {
-    const { GeoSearchControl, DaDataProvider } = geoSearchModules
+    const { GeoSearchControl, YandexProvider, DaDataProvider } = geoSearchModules
+
+    await new Promise((resolve) => {
+      if (window.ymaps?.ready) {
+        window.ymaps.ready(resolve)
+      } else {
+        const checkYmaps = setInterval(() => {
+          if (window.ymaps?.ready) {
+            clearInterval(checkYmaps)
+            window.ymaps.ready(resolve)
+          }
+        }, 100)
+      }
+    })
 
     const dadataToken = import.meta.env.VITE_DADATA_TOKEN
-    const provider = new DaDataProvider(dadataToken)
+    const yandexProvider = new YandexProvider()
+    const dadataProvider = new DaDataProvider(dadataToken)
 
     const searchControl = new GeoSearchControl({
-      provider: provider,
+      provider: yandexProvider,
       style: 'bar',
       showMarker: true,
       showPopup: false,
@@ -132,7 +147,8 @@ async function initializeMap(geoSearchModules) {
       retainZoomLevel: false,
       animateZoom: true,
       keepResult: false,
-      searchLabel: 'Введите адрес'
+      searchLabel: 'Введите адрес',
+      autoCompleteDelay: 250
     })
 
     map.addControl(searchControl)
