@@ -55,12 +55,9 @@ export const useBitrix24 = () => {
           filter: { categoryId: POLYGON_TYPE_ID }
         }
       }
-      for await (const chunk of 
-
-          }
-        }, true);
-      const data = batch.getData()
-      console.log(data)
+      for await (const chunk of $b24.fetchListMethod('crm.item.list', { entityTypeId: EnumCrmEntityTypeId.deal }, 'id')) {
+        console.log('chunk size', chunk.getData())
+      }
       return []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
