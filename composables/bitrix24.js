@@ -42,8 +42,8 @@ export const useBitrix24 = () => {
         entityTypeId: SMART_PROCESS_ID,
         filter: { categoryId: 61 }
       }
-      console.log('Polygon result:', result)
       const result = await b24Instance.callMethod('crm.item.list', params)
+      console.log('Polygon result:', result)
       return result.data?.items || []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
