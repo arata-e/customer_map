@@ -55,7 +55,7 @@ export const useBitrix24 = () => {
           filter: { categoryId: POLYGON_TYPE_ID }
         }
       }
-      for await (const chunk of $b24.fetchListMethod('crm.item.list', { entityTypeId: EnumCrmEntityTypeId.deal }, 'id')) {
+      for await (const chunk of b24Instance.fetchListMethod('crm.item.list', params)) {
         console.log('chunk size', chunk.getData())
       }
       return []
