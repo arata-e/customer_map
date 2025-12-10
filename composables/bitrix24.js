@@ -5,14 +5,25 @@ export const useBitrix24 = () => {
 
   const getGeoObjects = async (b24Instance, typeId = null) => {
     try {
-      const params = {
-        entityTypeId: SMART_PROCESS_ID,
-        select: ['*', 'UF_*'],
-        filter: typeId ? { categoryId: typeId } : {}
-      }
+      let allItems = []
+      let start = 0
 
-      const result = await b24Instance.callMethod('crm.item.list', params)
-      return result.data?.result?.items || []
+      do {
+        const params = {
+          entityTypeId: SMART_PROCESS_ID,
+          select: ['*', 'UF_*'],
+          filter: typeId ? { categoryId: typeId } : {},
+          start: start
+        }
+
+        const result = await b24Instance.callMethod('crm.item.list', params)
+        const items = result.data?.result?.items || []
+        allItems = allItems.concat(items)
+
+        start = result.data?.next || 0
+      } while (start !== 0)
+
+      return allItems
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
       return []
@@ -33,14 +44,26 @@ export const useBitrix24 = () => {
 
   const getPolygons = async (b24Instance) => {
     try {
-      const params = {
-        entityTypeId: SMART_PROCESS_ID,
-        select: ['*', 'UF_*'],
-        filter: { categoryId: POLYGON_TYPE_ID }
-      }
-      const result = await b24Instance.callMethod('crm.item.list', params)
-      console.log('Polygon result:', result)
-      return result.data?.result?.items || []
+      let allItems = []
+      let start = 0
+
+      do {
+        const params = {
+          entityTypeId: SMART_PROCESS_ID,
+          select: ['*', 'UF_*'],
+          filter: { categoryId: POLYGON_TYPE_ID },
+          start: start
+        }
+
+        const result = await b24Instance.callMethod('crm.item.list', params)
+        console.log('Polygon result:', result)
+        const items = result.data?.result?.items || []
+        allItems = allItems.concat(items)
+
+        start = result.data?.next || 0
+      } while (start !== 0)
+
+      return allItems
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
       return []
