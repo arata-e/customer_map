@@ -64,7 +64,7 @@ export const useBitrix24 = () => {
         start = result._data?.next || 0
         console.log('Polygon next:', start)
         i= i +1
-      } while (i < 10)
+      } while (i < 24)
 
       return allItems
     } catch (error) {
