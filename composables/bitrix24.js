@@ -12,7 +12,7 @@ export const useBitrix24 = () => {
       }
 
       const result = await b24Instance.callMethod('crm.item.list', params)
-      return result.data?.items || []
+      return result.data?.result?.items || []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
       return []
@@ -21,15 +21,10 @@ export const useBitrix24 = () => {
   
   const getStages = async (b24Instance, categoryId) => {
     try {
-      const params = {
-        entityTypeId: SMART_PROCESS_ID,
-        id: categoryId
-      }
-
       const result = await b24Instance.callMethod('crm.status.list', {
         filter: { ENTITY_ID: `DYNAMIC_${SMART_PROCESS_ID}_STAGE_${categoryId}` }
       })
-      return result.data?.statuses || []
+      return result.data?.result || []
     } catch (error) {
       console.error('Ошибка получения стадий:', error)
       return []
@@ -40,20 +35,17 @@ export const useBitrix24 = () => {
     try {
       const params = {
         entityTypeId: SMART_PROCESS_ID,
-        filter: { categoryId: 61 }
+        select: ['*', 'UF_*'],
+        filter: { categoryId: POLYGON_TYPE_ID }
       }
       const result = await b24Instance.callMethod('crm.item.list', params)
       console.log('Polygon result:', result)
-      return result.data?.items || []
+      return result.data?.result?.items || []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
       return []
     }
   }
-    
-//    {
-//    return await getGeoObjects(b24Instance, POLYGON_TYPE_ID)
-//  }
 
   const getPoints = async (b24Instance) => {
     return await getGeoObjects(b24Instance, POINT_TYPE_ID)
