@@ -44,31 +44,18 @@ export const useBitrix24 = () => {
 
   const getPolygons = async (b24Instance) => {
     try {
-      let allItems = []
-      let start = 0
-      let i = 0
-
-      
-        const params = {
-          entityTypeId: SMART_PROCESS_ID,
-          select: ['*', 'UF_*'],
-          filter: { categoryId: POLYGON_TYPE_ID },
-          start: start
-        }
-
-        let result = await b24Instance.callMethod('crm.item.list', params)
-        const items = result._data?.result?.items || []
-        allItems = allItems.concat(items)
-
-        start = result._data?.next || 0
-        console.log('Polygon next:', start)
-      do {
-        console.log('Polygon result:', result.isMore())
-         result = await result.getNext(b24Instance)
-        i= i +1
-      } while (i < 3)
-
-      return allItems
+        res = $b24.callBatch({
+          PoligonList: {
+            method: 'crm.item.list',
+            params: {
+              entityTypeId: SMART_PROCESS_ID,
+    		  filter: { categoryId: POLYGON_TYPE_ID }
+              order: { id: 'desc' },
+            }
+          }
+        }, true);
+      console.log(res)
+      retturn []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
       return []
