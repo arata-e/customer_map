@@ -24,12 +24,12 @@ export class YandexProvider {
             const bounds = geoObject.properties.get('boundedBy')
 
             const result = [{
-              x: coordinates[0],
-              y: coordinates[1],
+              x: coordinates[1],
+              y: coordinates[0],
               label: geoObject.properties.get('name') || query,
               bounds: bounds ? [
-                [bounds[0][1], bounds[0][0]],
-                [bounds[1][1], bounds[1][0]]
+                [bounds[0][0], bounds[0][1]],
+                [bounds[1][0], bounds[1][1]]
               ] : null,
               raw: geoObject
             }]
