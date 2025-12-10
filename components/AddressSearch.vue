@@ -125,7 +125,8 @@ function onBlur() {
 .address-search-wrapper {
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
   width: 350px;
 }
