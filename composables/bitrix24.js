@@ -35,7 +35,7 @@ export const useBitrix24 = () => {
       const result = await b24Instance.callMethod('crm.status.list', {
         filter: { ENTITY_ID: `DYNAMIC_${SMART_PROCESS_ID}_STAGE_${categoryId}` }
       })
-      return result.data?.result || []
+      return result._data?.result || []
     } catch (error) {
       console.error('Ошибка получения стадий:', error)
       return []
