@@ -49,12 +49,9 @@ export const useBitrix24 = () => {
   const getPolygons = async (b24Instance) => {
     try {
       const params ={ 
-        method: 'crm.item.list',
-        params: {
           entityTypeId: SMART_PROCESS_ID,
           filter: { categoryId: POLYGON_TYPE_ID }
         }
-      }
       for await (const chunk of b24Instance.fetchListMethod('crm.item.list', params)) {
         console.log('chunk size', chunk.getData())
       }
