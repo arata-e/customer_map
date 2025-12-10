@@ -162,44 +162,12 @@ async function initializeMap(geoSearchModules) {
     }
   })
 
-  pointLayer = L.geoJSON(null, {
-    pmIgnore: false,
-    pointToLayer: (feature, latlng) => {
-      return L.marker(latlng)
-    },
-    onEachFeature: (feature, layer) => {
-      if (feature.properties) {
-        const popupContent = `
-          <div>
-            <strong>${feature.properties.title || 'Без названия'}</strong><br>
-            ${feature.properties.description || ''}<br>
-            <small>ID: ${feature.properties.id}</small>
-          </div>
-        `
-        layer.bindPopup(popupContent)
-      }
-    }
+  pointLayer = L.markerClusterGroup({
+    pmIgnore: false
   })
 
-  endpointLayer = L.geoJSON(null, {
-    pmIgnore: false,
-    pointToLayer: (feature, latlng) => {
-      return L.marker(latlng, {
-        opacity: 0.5
-      })
-    },
-    onEachFeature: (feature, layer) => {
-      if (feature.properties) {
-        const popupContent = `
-          <div>
-            <strong>${feature.properties.title || 'Без названия'}</strong><br>
-            ${feature.properties.description || ''}<br>
-            <small>ID: ${feature.properties.id}</small>
-          </div>
-        `
-        layer.bindPopup(popupContent)
-      }
-    }
+  endpointLayer = L.markerClusterGroup({
+    pmIgnore: false
   })
 
   polygonLayer.addTo(map)
@@ -296,23 +264,42 @@ async function loadPoints() {
       if (!item.ufCrm33_1705393860) return
 
       try {
-        const feature = {
-          type: 'Feature',
-          properties: {
-            title: item.title,
-            description: item.ufCrm33_1705393848,
-            id: item.id,
-            type: 'smart',
-            stageId: item.stageId,
-            searchfield: item.id + '-' + item.title
-          },
-          geometry: JSON.parse(item.ufCrm33_1705393860)
-        }
+        const geometry = JSON.parse(item.ufCrm33_1705393860)
 
-        if (item.stageId === 'DT139_65:SUCCESS' || item.stageId === 'DT139_65:FAIL') {
-          endpointLayer.addData(feature)
-        } else {
-          pointLayer.addData(feature)
+        if (geometry.type === 'Point' && geometry.coordinates) {
+          const [lng, lat] = geometry.coordinates
+
+          const popupContent = `
+            <div>
+              <strong>${item.title || 'Без названия'}</strong><br>
+              ${item.ufCrm33_1705393848 || ''}<br>
+              <small>ID: ${item.id}</small>
+            </div>
+          `
+
+          const markerOptions = item.stageId === 'DT139_65:SUCCESS' || item.stageId === 'DT139_65:FAIL'
+            ? { opacity: 0.5 }
+            : {}
+
+          const marker = L.marker([lat, lng], markerOptions)
+          marker.bindPopup(popupContent)
+
+          marker.feature = {
+            properties: {
+              id: item.id,
+              title: item.title,
+              description: item.ufCrm33_1705393848,
+              type: 'smart',
+              stageId: item.stageId,
+              searchfield: item.id + '-' + item.title
+            }
+          }
+
+          if (item.stageId === 'DT139_65:SUCCESS' || item.stageId === 'DT139_65:FAIL') {
+            endpointLayer.addLayer(marker)
+          } else {
+            pointLayer.addLayer(marker)
+          }
         }
       } catch (error) {
         console.error('Ошибка обработки точки:', item.id, error)
@@ -396,11 +383,13 @@ onUnmounted(() => {
   }
 
   if (pointLayer && map) {
+    pointLayer.clearLayers()
     map.removeLayer(pointLayer)
     pointLayer = null
   }
 
   if (endpointLayer && map) {
+    endpointLayer.clearLayers()
     map.removeLayer(endpointLayer)
     endpointLayer = null
   }
