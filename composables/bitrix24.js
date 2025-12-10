@@ -9,9 +9,9 @@ export const useBitrix24 = () => {
 
   const getGeoObjects = async (b24Instance, typeId = null) => {
     try {
-      const params ={ 
+      const params ={
           "entityTypeId": SMART_PROCESS_ID,
-          "filter": { "categoryId": POLYGON_TYPE_ID }
+          "filter": typeId ? { "categoryId": typeId } : {}
         }
       let allItems = []
       for await (const items of b24Instance.fetchListMethod('crm.item.list', params,'id','items')) {

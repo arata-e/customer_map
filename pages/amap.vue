@@ -28,6 +28,8 @@ let L = null
 let searchMarker = null
 let polygonLayer = null
 let endpolygonLayer = null
+let pointLayer = null
+let endpointLayer = null
 
 onMounted(async () => {
   try {
@@ -160,8 +162,50 @@ async function initializeMap(geoSearchModules) {
     }
   })
 
+  pointLayer = L.geoJSON(null, {
+    pmIgnore: false,
+    pointToLayer: (feature, latlng) => {
+      return L.marker(latlng)
+    },
+    onEachFeature: (feature, layer) => {
+      if (feature.properties) {
+        const popupContent = `
+          <div>
+            <strong>${feature.properties.title || 'Без названия'}</strong><br>
+            ${feature.properties.description || ''}<br>
+            <small>ID: ${feature.properties.id}</small>
+          </div>
+        `
+        layer.bindPopup(popupContent)
+      }
+    }
+  })
+
+  endpointLayer = L.geoJSON(null, {
+    pmIgnore: false,
+    pointToLayer: (feature, latlng) => {
+      return L.marker(latlng, {
+        opacity: 0.5
+      })
+    },
+    onEachFeature: (feature, layer) => {
+      if (feature.properties) {
+        const popupContent = `
+          <div>
+            <strong>${feature.properties.title || 'Без названия'}</strong><br>
+            ${feature.properties.description || ''}<br>
+            <small>ID: ${feature.properties.id}</small>
+          </div>
+        `
+        layer.bindPopup(popupContent)
+      }
+    }
+  })
+
   polygonLayer.addTo(map)
   endpolygonLayer.addTo(map)
+  pointLayer.addTo(map)
+  endpointLayer.addTo(map)
 
   const baseLayers = {
     'Google Street': googleStreet,
@@ -171,7 +215,9 @@ async function initializeMap(geoSearchModules) {
 
   const overlayLayers = {
     'Полигоны в работе': polygonLayer,
-    'Обработанные полигоны': endpolygonLayer
+    'Обработанные полигоны': endpolygonLayer,
+    'Точки в работе': pointLayer,
+    'Обработанные точки': endpointLayer
   }
 
   L.control.layers(baseLayers, overlayLayers).addTo(map)
@@ -192,6 +238,7 @@ async function initializeMap(geoSearchModules) {
 
   setupMapEvents()
   await loadPolygons()
+  await loadPoints()
 }
 
 async function loadPolygons() {
@@ -232,6 +279,47 @@ async function loadPolygons() {
     })
   } catch (error) {
     console.error('Ошибка загрузки полигонов:', error)
+  }
+}
+
+async function loadPoints() {
+  if (!b24Instance || !pointLayer || !endpointLayer) return
+
+  try {
+    loadingMessage.value = 'Загрузка точек...'
+    const { getPoints } = useBitrix24()
+    const points = await getPoints(b24Instance)
+
+    console.log('Загружено точек:', points.length)
+
+    points.forEach(item => {
+      if (!item.ufCrm33_1705393860) return
+
+      try {
+        const feature = {
+          type: 'Feature',
+          properties: {
+            title: item.title,
+            description: item.ufCrm33_1705393848,
+            id: item.id,
+            type: 'smart',
+            stageId: item.stageId,
+            searchfield: item.id + '-' + item.title
+          },
+          geometry: JSON.parse(item.ufCrm33_1705393860)
+        }
+
+        if (item.stageId === 'DT139_65:SUCCESS' || item.stageId === 'DT139_65:FAIL') {
+          endpointLayer.addData(feature)
+        } else {
+          pointLayer.addData(feature)
+        }
+      } catch (error) {
+        console.error('Ошибка обработки точки:', item.id, error)
+      }
+    })
+  } catch (error) {
+    console.error('Ошибка загрузки точек:', error)
   }
 }
 
@@ -305,6 +393,16 @@ onUnmounted(() => {
   if (endpolygonLayer && map) {
     map.removeLayer(endpolygonLayer)
     endpolygonLayer = null
+  }
+
+  if (pointLayer && map) {
+    map.removeLayer(pointLayer)
+    pointLayer = null
+  }
+
+  if (endpointLayer && map) {
+    map.removeLayer(endpointLayer)
+    endpointLayer = null
   }
 
   if (map) {
