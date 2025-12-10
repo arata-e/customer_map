@@ -24,8 +24,18 @@ onMounted(async () => {
     loadingMessage.value = 'Подключение к Bitrix24...'
 
     if (process.client) {
-      const { B24Frame } = await import('@bitrix24/b24jssdk')
-      b24Instance = await B24Frame.init()
+      console.log('Initializing B24Frame...')
+      const { initializeB24Frame, LoggerBrowser } = await import('@bitrix24/b24jssdk')
+
+      b24Instance = await initializeB24Frame()
+
+      b24Instance.setLogger(
+        LoggerBrowser.build('MapWidget')
+      )
+
+      console.log('B24Frame initialized')
+      console.log('Placement info:', b24Instance.getTargetOrigin())
+      console.log('Auth data:', b24Instance.auth.getAuthData())
     }
 
     loadingMessage.value = 'Загрузка карты...'
@@ -140,6 +150,11 @@ onUnmounted(() => {
   if (map) {
     map.remove()
     map = null
+  }
+
+  if (b24Instance) {
+    b24Instance.destroy()
+    b24Instance = null
   }
 })
 </script>
