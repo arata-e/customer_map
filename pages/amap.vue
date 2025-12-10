@@ -10,7 +10,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { B24Frame } from '@bitrix24/b24jssdk'
 
 const mapElement = ref(null)
 const mapReady = ref(false)
@@ -23,7 +22,11 @@ let L = null
 onMounted(async () => {
   try {
     loadingMessage.value = 'Подключение к Bitrix24...'
-    b24Instance = await B24Frame.initializeB24Frame()
+
+    if (process.client) {
+      const { B24Frame } = await import('@bitrix24/b24jssdk')
+      b24Instance = await B24Frame.init()
+    }
 
     loadingMessage.value = 'Загрузка карты...'
     await loadLeaflet()
