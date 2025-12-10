@@ -1,0 +1,26 @@
+{
+  "name": "bitrix24-userside-map-widget",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@bitrix24/b24jssdk": "^0.5.1",
+    "nuxt": "^4.2.1",
+    "vue": "^3.5.25",
+    "leaflet": "^1.9.4",
+    "@geoman-io/leaflet-geoman-free": "^2.16.0",
+    "leaflet.markercluster": "^1.5.3",
+    "leaflet-contextmenu": "^1.5.1"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.8",
+    "@types/leaflet.markercluster": "^1.5.4"
+  }
+}
