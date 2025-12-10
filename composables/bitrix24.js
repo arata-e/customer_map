@@ -64,7 +64,7 @@ export const useBitrix24 = () => {
         console.log('Polygon next:', start)
       do {
         console.log('Polygon result:', result.isMore())
-         result = await result.getNext()
+         result = await result.getNext(b24Instance)
         i= i +1
       } while (i < 3)
 
