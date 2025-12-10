@@ -1,18 +1,30 @@
 <template>
   <div class="address-search-wrapper">
-    <VueDadataSuggestions
-      v-model="address"
-      :token="dadataToken"
-      type="ADDRESS"
+    <input
+      v-model="query"
+      type="text"
       :placeholder="placeholder"
-      @select="onAddressSelect"
+      class="address-input"
+      @input="onInput"
+      @focus="showSuggestions = true"
+      @blur="onBlur"
     />
+    <div v-if="showSuggestions && suggestions.length > 0" class="suggestions-list">
+      <div
+        v-for="(suggestion, index) in suggestions"
+        :key="index"
+        class="suggestion-item"
+        @mousedown.prevent="selectSuggestion(suggestion)"
+      >
+        {{ suggestion.value }}
+      </div>
+    </div>
+    <div v-if="loading" class="loading-indicator">Загрузка...</div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import VueDadataSuggestions from 'vue-dadata-suggestions'
 
 const props = defineProps({
   dadataToken: {
@@ -27,17 +39,85 @@ const props = defineProps({
 
 const emit = defineEmits(['address-selected'])
 
-const address = ref('')
+const query = ref('')
+const suggestions = ref([])
+const showSuggestions = ref(false)
+const loading = ref(false)
 
-function onAddressSelect(suggestion) {
-  if (suggestion?.data?.geo_lat && suggestion?.data?.geo_lon) {
-    emit('address-selected', {
-      lat: parseFloat(suggestion.data.geo_lat),
-      lng: parseFloat(suggestion.data.geo_lon),
-      label: suggestion.value,
-      data: suggestion
-    })
+let timeoutId = null
+
+async function onInput() {
+  if (timeoutId) {
+    clearTimeout(timeoutId)
   }
+
+  if (query.value.length < 3) {
+    suggestions.value = []
+    return
+  }
+
+  timeoutId = setTimeout(async () => {
+    await fetchSuggestions()
+  }, 300)
+}
+
+async function fetchSuggestions() {
+  if (!query.value || query.value.length < 3) {
+    suggestions.value = []
+    return
+  }
+
+  loading.value = true
+
+  try {
+    const response = await fetch('https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/address', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Token ${props.dadataToken}`
+      },
+      body: JSON.stringify({
+        query: query.value,
+        count: 10
+      })
+    })
+
+    if (!response.ok) {
+      console.error('DaData API error:', response.status)
+      suggestions.value = []
+      return
+    }
+
+    const data = await response.json()
+
+    suggestions.value = (data.suggestions || [])
+      .filter(s => s.data.geo_lat && s.data.geo_lon)
+
+  } catch (error) {
+    console.error('DaData search error:', error)
+    suggestions.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+function selectSuggestion(suggestion) {
+  query.value = suggestion.value
+  showSuggestions.value = false
+
+  emit('address-selected', {
+    lat: parseFloat(suggestion.data.geo_lat),
+    lng: parseFloat(suggestion.data.geo_lon),
+    label: suggestion.value,
+    data: suggestion
+  })
+}
+
+function onBlur() {
+  setTimeout(() => {
+    showSuggestions.value = false
+  }, 200)
 }
 </script>
 
@@ -47,50 +127,67 @@ function onAddressSelect(suggestion) {
   top: 10px;
   right: 10px;
   z-index: 1000;
-  width: 300px;
+  width: 350px;
 }
 
-.address-search-wrapper :deep(.vue-dadata-suggestions) {
+.address-input {
   width: 100%;
-}
-
-.address-search-wrapper :deep(input) {
-  width: 100%;
-  padding: 10px 15px;
+  padding: 12px 16px;
   border: 2px solid rgba(0, 0, 0, 0.2);
   border-radius: 4px;
   font-size: 14px;
   background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s;
 }
 
-.address-search-wrapper :deep(input:focus) {
+.address-input:focus {
   outline: none;
   border-color: #0066cc;
 }
 
-.address-search-wrapper :deep(.suggestions) {
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
   background: white;
   border: 2px solid rgba(0, 0, 0, 0.2);
-  border-top: none;
-  border-radius: 0 0 4px 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  max-height: 300px;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  max-height: 400px;
   overflow-y: auto;
+  z-index: 1001;
 }
 
-.address-search-wrapper :deep(.suggestion) {
-  padding: 10px 15px;
+.suggestion-item {
+  padding: 12px 16px;
   cursor: pointer;
   font-size: 14px;
   border-bottom: 1px solid #eee;
+  transition: background-color 0.15s;
 }
 
-.address-search-wrapper :deep(.suggestion:hover) {
+.suggestion-item:hover {
   background: #f5f5f5;
 }
 
-.address-search-wrapper :deep(.suggestion:last-child) {
+.suggestion-item:last-child {
   border-bottom: none;
+}
+
+.loading-indicator {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>
