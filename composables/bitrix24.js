@@ -52,9 +52,11 @@ export const useBitrix24 = () => {
           "entityTypeId": SMART_PROCESS_ID,
           "filter": { "categoryId": POLYGON_TYPE_ID }
         }
-      for await (const chunk of b24Instance.fetchListMethod('crm.item.list', params,'id','items')) {
-        console.log('chunk size', chunk.length)
+      let allItems = []
+      for await (const items of b24Instance.fetchListMethod('crm.item.list', params,'id','items')) {
+        allItems = allItems.concat(items)
       }
+      console.log(allItems)
       return []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
