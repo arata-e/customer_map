@@ -9,24 +9,14 @@ export const useBitrix24 = () => {
 
   const getGeoObjects = async (b24Instance, typeId = null) => {
     try {
-      let allItems = []
-      let start = 0
-
-      do {
-        const params = {
-          entityTypeId: SMART_PROCESS_ID,
-          select: ['*', 'UF_*'],
-          filter: typeId ? { categoryId: typeId } : {},
-          start: start
+      const params ={ 
+          "entityTypeId": SMART_PROCESS_ID,
+          "filter": { "categoryId": POLYGON_TYPE_ID }
         }
-
-        const result = await b24Instance.callMethod('crm.item.list', params)
-        const items = result._data?.result?.items || []
+      let allItems = []
+      for await (const items of b24Instance.fetchListMethod('crm.item.list', params,'id','items')) {
         allItems = allItems.concat(items)
-
-        start = result._data?.next || 0
-      } while (start !== 0)
-
+      }
       return allItems
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
@@ -56,8 +46,7 @@ export const useBitrix24 = () => {
       for await (const items of b24Instance.fetchListMethod('crm.item.list', params,'id','items')) {
         allItems = allItems.concat(items)
       }
-      console.log(allItems)
-      return []
+      return allItems
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
       return []
