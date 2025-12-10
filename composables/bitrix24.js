@@ -1,3 +1,12 @@
+import {
+  B24Frame,
+  EnumCrmEntityTypeId,
+  Text,
+  LoggerBrowser,
+  Result,
+  type ISODate
+} from '@bitrix24/b24jssdk'
+
 export const useBitrix24 = () => {
   const SMART_PROCESS_ID = 139
   const POLYGON_TYPE_ID = 61
@@ -44,7 +53,7 @@ export const useBitrix24 = () => {
 
   const getPolygons = async (b24Instance) => {
     try {
-        const result = await b24Instance.callBatch({
+        const batch: Result  = await b24Instance.callBatch({
           PoligonList: {
             method: 'crm.item.list',
             params: {
@@ -53,6 +62,7 @@ export const useBitrix24 = () => {
             }
           }
         }, true);
+      const data = batch.getData()
       console.log(result)
       return []
     } catch (error) {
