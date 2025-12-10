@@ -56,7 +56,7 @@ export const useBitrix24 = () => {
         }
 
         const result = await b24Instance.callMethod('crm.item.list', params)
-        console.log('Polygon result:', result)
+        console.log('Polygon result:', result.data)
         const items = result.data?.result?.items || []
         allItems = allItems.concat(items)
 
