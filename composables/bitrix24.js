@@ -42,7 +42,7 @@ export const useBitrix24 = () => {
         entityTypeId: SMART_PROCESS_ID,
         filter: { categoryId: 61 }
       }
-      console.log('Auth data:', b24Instance.auth.getAuthData())
+      console.log('Polygon result:', result)
       const result = await b24Instance.callMethod('crm.item.list', params)
       return result.data?.items || []
     } catch (error) {
