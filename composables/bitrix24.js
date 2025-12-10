@@ -47,7 +47,7 @@ export const useBitrix24 = () => {
       let allItems = []
       let start = 0
 
-  //    do {
+      do {
         const params = {
           entityTypeId: SMART_PROCESS_ID,
           select: ['*', 'UF_*'],
@@ -61,8 +61,8 @@ export const useBitrix24 = () => {
         allItems = allItems.concat(items)
 
         start = result._data?.next || 0
-        console.log('Polygon result:', start)
-//      } while (start !== 0)
+        console.log('Polygon next:', start)
+      } while (start !== 0)
 
       return allItems
     } catch (error) {
