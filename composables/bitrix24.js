@@ -55,7 +55,7 @@ export const useBitrix24 = () => {
           }
         }, true);
       console.log(res)
-      retturn []
+      return []
     } catch (error) {
       console.error('Ошибка получения геообъектов:', error)
       return []
