@@ -19,6 +19,23 @@ export const useBitrix24 = () => {
     }
   }
 
+  const getStages = async (b24Instance, categoryId) => {
+    try {
+      const params = {
+        entityTypeId: SMART_PROCESS_ID,
+        id: categoryId
+      }
+
+      const result = await b24Instance.callMethod('crm.status.list', {
+        filter: { ENTITY_ID: `DYNAMIC_${SMART_PROCESS_ID}_STAGE_${categoryId}` }
+      })
+      return result.data?.statuses || []
+    } catch (error) {
+      console.error('Ошибка получения стадий:', error)
+      return []
+    }
+  }
+
   const getPolygons = async (b24Instance) => {
     return await getGeoObjects(b24Instance, POLYGON_TYPE_ID)
   }
@@ -104,6 +121,7 @@ export const useBitrix24 = () => {
     POLYGON_TYPE_ID,
     POINT_TYPE_ID,
     getGeoObjects,
+    getStages,
     getPolygons,
     getPoints,
     createGeoObject,

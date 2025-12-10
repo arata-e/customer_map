@@ -26,6 +26,8 @@ let b24Instance = null
 let map = null
 let L = null
 let searchMarker = null
+let polygonLayer = null
+let endpolygonLayer = null
 
 onMounted(async () => {
   try {
@@ -114,13 +116,65 @@ async function initializeMap(geoSearchModules) {
 
   openStreetMap.addTo(map)
 
+  polygonLayer = L.geoJSON(null, {
+    pmIgnore: false,
+    style: {
+      color: '#3388ff',
+      weight: 2,
+      opacity: 0.8,
+      fillOpacity: 0.4
+    },
+    onEachFeature: (feature, layer) => {
+      if (feature.properties) {
+        const popupContent = `
+          <div>
+            <strong>${feature.properties.title || 'Без названия'}</strong><br>
+            ${feature.properties.description || ''}<br>
+            <small>ID: ${feature.properties.id}</small>
+          </div>
+        `
+        layer.bindPopup(popupContent)
+      }
+    }
+  })
+
+  endpolygonLayer = L.geoJSON(null, {
+    pmIgnore: false,
+    style: {
+      color: '#888888',
+      weight: 2,
+      opacity: 0.5,
+      fillOpacity: 0.2
+    },
+    onEachFeature: (feature, layer) => {
+      if (feature.properties) {
+        const popupContent = `
+          <div>
+            <strong>${feature.properties.title || 'Без названия'}</strong><br>
+            ${feature.properties.description || ''}<br>
+            <small>ID: ${feature.properties.id}</small>
+          </div>
+        `
+        layer.bindPopup(popupContent)
+      }
+    }
+  })
+
+  polygonLayer.addTo(map)
+  endpolygonLayer.addTo(map)
+
   const baseLayers = {
     'Google Street': googleStreet,
     'Google Hybrid': googleHybrid,
     'OpenStreetMap': openStreetMap
   }
 
-  L.control.layers(baseLayers).addTo(map)
+  const overlayLayers = {
+    'Полигоны в работе': polygonLayer,
+    'Обработанные полигоны': endpolygonLayer
+  }
+
+  L.control.layers(baseLayers, overlayLayers).addTo(map)
 
   map.pm.addControls({
     position: 'topleft',
@@ -137,6 +191,48 @@ async function initializeMap(geoSearchModules) {
   })
 
   setupMapEvents()
+  await loadPolygons()
+}
+
+async function loadPolygons() {
+  if (!b24Instance || !polygonLayer || !endpolygonLayer) return
+
+  try {
+    loadingMessage.value = 'Загрузка полигонов...'
+    const { getPolygons } = useBitrix24()
+    const polygons = await getPolygons(b24Instance)
+
+    console.log('Загружено полигонов:', polygons.length)
+
+    polygons.forEach(item => {
+      if (!item.ufCrm33_1705393860) return
+
+      try {
+        const feature = {
+          type: 'Feature',
+          properties: {
+            title: item.title,
+            description: item.ufCrm33_1705393848,
+            id: item.id,
+            type: 'smart',
+            stageId: item.stageId,
+            searchfield: item.id + '-' + item.title
+          },
+          geometry: JSON.parse(item.ufCrm33_1705393860)
+        }
+
+        if (item.stageId === 'DT139_61:SUCCESS' || item.stageId === 'DT139_61:FAIL') {
+          endpolygonLayer.addData(feature)
+        } else {
+          polygonLayer.addData(feature)
+        }
+      } catch (error) {
+        console.error('Ошибка обработки полигона:', item.id, error)
+      }
+    })
+  } catch (error) {
+    console.error('Ошибка загрузки полигонов:', error)
+  }
 }
 
 function setupMapEvents() {
@@ -199,6 +295,16 @@ onUnmounted(() => {
   if (searchMarker && map) {
     map.removeLayer(searchMarker)
     searchMarker = null
+  }
+
+  if (polygonLayer && map) {
+    map.removeLayer(polygonLayer)
+    polygonLayer = null
+  }
+
+  if (endpolygonLayer && map) {
+    map.removeLayer(endpolygonLayer)
+    endpolygonLayer = null
   }
 
   if (map) {
