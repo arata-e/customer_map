@@ -15,6 +15,7 @@ export class YandexProvider {
           (res) => {
             const geoObject = res.geoObjects.get(0)
             if (!geoObject) {
+              console.log('Yandex search result: empty')
               resolve([])
               return
             }
@@ -33,6 +34,7 @@ export class YandexProvider {
               raw: geoObject
             }]
 
+            console.log('Yandex search result:', result)
             resolve(result)
           },
           (err) => {
