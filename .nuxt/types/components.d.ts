@@ -16,6 +16,7 @@ type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {},
 interface _GlobalComponents {
   'AddressSearch': typeof import("../../components/AddressSearch.vue").default
   'ObjectSearch': typeof import("../../components/ObjectSearch.vue").default
+  'ResetViewButton': typeof import("../../components/ResetViewButton.vue").default
   'NuxtWelcome': typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue").default
   'NuxtLayout': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout").default
   'NuxtErrorBoundary': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue").default
@@ -41,6 +42,7 @@ interface _GlobalComponents {
   'NuxtIsland': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island").default
   'LazyAddressSearch': LazyComponent<typeof import("../../components/AddressSearch.vue").default>
   'LazyObjectSearch': LazyComponent<typeof import("../../components/ObjectSearch.vue").default>
+  'LazyResetViewButton': LazyComponent<typeof import("../../components/ResetViewButton.vue").default>
   'LazyNuxtWelcome': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue").default>
   'LazyNuxtLayout': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout").default>
   'LazyNuxtErrorBoundary': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue").default>
