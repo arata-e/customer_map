@@ -422,9 +422,80 @@ async function loadPointsDone() {
   }
 }
 
+async function handleObjectCreate(e: any) {
+  if (!b24Instance || !map) return
+
+  const title = prompt('Введите название объекта:')
+
+  if (!title || title.trim() === '') {
+    map.removeLayer(e.layer)
+    return
+  }
+
+  try {
+    const { createGeoObject, POLYGON_TYPE_ID, POINT_TYPE_ID } = useBitrix24()
+
+    let geometry = null
+    let categoryId = null
+
+    if (e.shape === 'Marker') {
+      const latlng = e.layer.getLatLng()
+      geometry = {
+        type: 'Point',
+        coordinates: [latlng.lng, latlng.lat]
+      }
+      categoryId = POINT_TYPE_ID
+    } else if (e.shape === 'Polygon' || e.shape === 'Rectangle') {
+      const latlngs = e.layer.getLatLngs()[0]
+      const coordinates = latlngs.map((latlng: any) => [latlng.lng, latlng.lat])
+      coordinates.push(coordinates[0])
+
+      geometry = {
+        type: 'Polygon',
+        coordinates: [coordinates]
+      }
+      categoryId = POLYGON_TYPE_ID
+    } else {
+      console.error('Неподдерживаемый тип объекта:', e.shape)
+      map.removeLayer(e.layer)
+      return
+    }
+
+    map.removeLayer(e.layer)
+
+    const data = {
+      title: title.trim(),
+      ufCrm33_1705393860: JSON.stringify(geometry)
+    }
+
+    const result = await createGeoObject(b24Instance, data, categoryId)
+    console.log('Create result:', result)
+
+    if (!result || !result.item || !result.item.id) {
+      console.error('Не удалось создать объект в Битрикс', result)
+      return
+    }
+
+    const newItemId = result.item.id
+
+    await b24Instance.slider.openPath(
+      b24Instance.slider.getUrl(`/crm/type/139/details/${newItemId}/`)
+    ).then(async (response: StatusClose) => {
+      console.log('Slider response:', response)
+      if (!response.isOpenAtNewWindow && response.isClose) {
+        console.log('Slider is closed! Adding new object to map')
+        await refreshObjectOnMap(newItemId)
+      }
+    })
+  } catch (error) {
+    console.error('Ошибка при создании объекта:', error)
+  }
+}
+
 function setupMapEvents() {
   map.on('pm:create', async (e) => {
     console.log('Создан объект:', e.shape, e.layer)
+    await handleObjectCreate(e)
   })
 
   map.on('pm:edit', async (e) => {
@@ -576,7 +647,7 @@ function setupLayerContextMenu(layer, parentLayer) {
   })
 }
 
-async function (response: StatusClose) =>(itemId: number) {
+async function openObjectInSlider(itemId: number) {
   if (!b24Instance || !map) return
 
   map.closePopup()
