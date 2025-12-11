@@ -219,10 +219,10 @@ async function initializeMap() {
     drawCircle: false,
     drawCircleMarker: false,
     drawRectangle: true,
-    editMode: true,
-    dragMode: true,
+    editMode: false,
+    dragMode: false,
     cutPolygon: false,
-    removalMode: true
+    removalMode: false
   })
 
   setupMapEvents()
@@ -493,66 +493,10 @@ async function handleObjectCreate(e: any) {
   }
 }
 
-async function handleObjectEdit(e: any) {
-  if (!b24Instance || !map) return
-
-  const layers = e.layers || (e.layer ? [e.layer] : [])
-
-  for (const layer of layers) {
-    if (!layer.feature || !layer.feature.properties || !layer.feature.properties.id) {
-      console.log('Слой не имеет ID объекта, пропускаем')
-      continue
-    }
-
-    try {
-      const itemId = layer.feature.properties.id
-      let geometry = null
-
-      if (layer instanceof L.Marker) {
-        const latlng = layer.getLatLng()
-        geometry = {
-          type: 'Point',
-          coordinates: [latlng.lng, latlng.lat]
-        }
-      } else if (layer.getLatLngs) {
-        const latlngs = layer.getLatLngs()[0]
-        const coordinates = latlngs.map((latlng: any) => [latlng.lng, latlng.lat])
-        coordinates.push(coordinates[0])
-
-        geometry = {
-          type: 'Polygon',
-          coordinates: [coordinates]
-        }
-      } else {
-        console.error('Неподдерживаемый тип слоя для редактирования')
-        continue
-      }
-
-      const { updateGeoObject } = useBitrix24()
-
-      const data = {
-        ufCrm33_1705393860: JSON.stringify(geometry)
-      }
-
-      await updateGeoObject(b24Instance, itemId, data)
-      console.log('Геометрия объекта обновлена:', itemId)
-
-      layer.feature.geometry = geometry
-    } catch (error) {
-      console.error('Ошибка при обновлении объекта:', error)
-    }
-  }
-}
-
 function setupMapEvents() {
   map.on('pm:create', async (e) => {
     console.log('Создан объект:', e.shape, e.layer)
     await handleObjectCreate(e)
-  })
-
-  map.on('pm:edit', async (e) => {
-    console.log('Изменен объект:', e.layer)
-    await handleObjectEdit(e)
   })
 
   map.on('pm:remove', async (e) => {
@@ -691,8 +635,12 @@ function setupLayerContextMenu(layer, parentLayer) {
       .setContent(`
         <div style="text-align: center;">
           <button onclick="window.openObjectInSlider(${itemId})"
-                  style="display: block; width: 100%; padding: 8px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 4px;">
+                  style="display: block; width: 100%; padding: 8px; margin-bottom: 4px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 4px;">
             Открыть
+          </button>
+          <button onclick="window.editLayerGeometry('${layer._leaflet_id}')"
+                  style="display: block; width: 100%; padding: 8px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">
+            Редактировать
           </button>
         </div>
       `)
@@ -717,6 +665,91 @@ async function openObjectInSlider(itemId: number) {
     })
   } catch (error) {
     console.error('Ошибка при работе со слайдером:', error)
+  }
+}
+
+function editLayerGeometry(layerId: string) {
+  if (!map) return
+
+  map.closePopup()
+
+  const allLayers = [polygonLayer, endpolygonLayer, pointLayer, endpointLayer]
+  let targetLayer = null
+
+  for (const layerGroup of allLayers) {
+    if (!layerGroup) continue
+
+    layerGroup.eachLayer((layer: any) => {
+      if (layer._leaflet_id.toString() === layerId) {
+        targetLayer = layer
+        return
+      }
+    })
+
+    if (targetLayer) break
+  }
+
+  if (!targetLayer) {
+    console.error('Слой не найден:', layerId)
+    return
+  }
+
+  if (targetLayer.pm) {
+    targetLayer.pm.enable({
+      allowSelfIntersection: false,
+      snappable: true,
+      snapDistance: 20
+    })
+
+    targetLayer.once('pm:edit', async (e: any) => {
+      console.log('Редактирование завершено')
+      await handleLayerEdit(targetLayer)
+      targetLayer.pm.disable()
+    })
+  }
+}
+
+async function handleLayerEdit(layer: any) {
+  if (!b24Instance || !layer.feature || !layer.feature.properties) return
+
+  try {
+    const itemId = layer.feature.properties.id
+    let geometry = null
+
+    if (layer instanceof L.Marker) {
+      const latlng = layer.getLatLng()
+      geometry = {
+        type: 'Point',
+        coordinates: [latlng.lng, latlng.lat]
+      }
+    } else if (layer.getLatLngs) {
+      const latlngs = layer.getLatLngs()[0]
+      const coordinates = latlngs.map((latlng: any) => [latlng.lng, latlng.lat])
+      coordinates.push(coordinates[0])
+
+      geometry = {
+        type: 'Polygon',
+        coordinates: [coordinates]
+      }
+    }
+
+    if (!geometry) {
+      console.error('Не удалось получить геометрию слоя')
+      return
+    }
+
+    const { updateGeoObject } = useBitrix24()
+
+    const data = {
+      ufCrm33_1705393860: JSON.stringify(geometry)
+    }
+
+    await updateGeoObject(b24Instance, itemId, data)
+    console.log('Геометрия объекта обновлена:', itemId)
+
+    layer.feature.geometry = geometry
+  } catch (error) {
+    console.error('Ошибка при обновлении геометрии:', error)
   }
 }
 
@@ -826,6 +859,7 @@ function removeObjectFromAllLayers(itemId: number) {
 
 if (process.client) {
   window.openObjectInSlider = openObjectInSlider
+  window.editLayerGeometry = editLayerGeometry
   window.createPointAtLocation = (lat, lng) => {
     console.log('Создать точку в координатах:', lat, lng)
     if (map) map.closePopup()
