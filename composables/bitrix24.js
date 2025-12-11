@@ -52,7 +52,7 @@ export const useBitrix24 = () => {
     let f = {"!@stageId": ['DT139_65:SUCCESS', 'DT139_65:FAIL']}
     return await getGeoObjects(b24Instance, POINT_TYPE_ID, f)
   }
-  const getPointsDonw = async (b24Instance) => {
+  const getPointsDone = async (b24Instance) => {
     let f = {"@stageId": ['DT139_65:SUCCESS', 'DT139_65:FAIL']}
     return await getGeoObjects(b24Instance, POINT_TYPE_ID, f)
   }
