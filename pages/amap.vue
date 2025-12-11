@@ -22,9 +22,11 @@ const mapReady = ref(false)
 const loadingMessage = ref('Инициализация...')
 const dadataToken = import.meta.env.VITE_DADATA_TOKEN
 
+const { $leaflet } = useNuxtApp()
+let L = null
+
 let b24Instance = null
 let map = null
-let L = null
 let searchMarker = null
 let polygonLayer = null
 let endpolygonLayer = null
@@ -48,13 +50,14 @@ onMounted(async () => {
       console.log('B24Frame initialized')
       console.log('Placement info:', b24Instance.getTargetOrigin())
       console.log('Auth data:', b24Instance.auth.getAuthData())
+
+      loadingMessage.value = 'Загрузка карты...'
+      L = $leaflet
+      console.log('L.markerClusterGroup available:', typeof L.markerClusterGroup)
     }
 
-    loadingMessage.value = 'Загрузка карты...'
-    const geoSearchModules = await loadLeaflet()
-
     loadingMessage.value = 'Настройка карты...'
-    await initializeMap(geoSearchModules)
+    await initializeMap()
 
     mapReady.value = true
   } catch (error) {
@@ -63,16 +66,7 @@ onMounted(async () => {
   }
 })
 
-async function loadLeaflet() {
-  if (process.client) {
-    L = await import('leaflet')
-    await import('leaflet.markercluster')
-    await import('@geoman-io/leaflet-geoman-free')
-  }
-  return null
-}
-
-async function initializeMap(geoSearchModules) {
+async function initializeMap() {
   if (!mapElement.value || !L) return
 
   map = L.map(mapElement.value, {
