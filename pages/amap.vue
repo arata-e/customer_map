@@ -599,7 +599,7 @@ async function openObjectInSlider(itemId) {
 }
 
 async function refreshObjectOnMap(itemId) {
-  console.log("refresh for item": itemId)
+  console.log("refresh for item :" itemId)
   const { getItem, POLYGON_TYPE_ID, POINT_TYPE_ID } = useBitrix24()
 
   try {
