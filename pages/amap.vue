@@ -27,8 +27,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import AddressSearch from '~/components/AddressSearch.vue'
 import ObjectSearch from '~/components/ObjectSearch.vue'
 import ResetViewButton from '~/components/ResetViewButton.vue'
-import Result from '@bitrix24/b24jssdk'
-import StatusClose from '@bitrix24/b24jssdk'
+import {Result, StatusClose} from '@bitrix24/b24jssdk'
   
 const mapElement = ref(null)
 const mapReady = ref(false)
