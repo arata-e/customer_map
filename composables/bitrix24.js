@@ -12,7 +12,7 @@ export const useBitrix24 = () => {
       let f = typeId ? { "categoryId": typeId } : {}
       const params ={
           "entityTypeId": SMART_PROCESS_ID,
-          "filter": {...f,...filter}
+          "filter": f
         }
       let allItems = []
       for await (const items of b24Instance.fetchListMethod('crm.item.list', params,'id','items')) {
