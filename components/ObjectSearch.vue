@@ -121,7 +121,7 @@ if (process.client) {
 <style scoped>
 .object-search {
   position: absolute;
-  top: 76px;
+  top: 84px;
   left: 10px;
   z-index: 1000;
 }
