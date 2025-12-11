@@ -10,17 +10,24 @@
       :dadata-token="dadataToken"
       @address-selected="onAddressSelected"
     />
+    <ObjectSearch
+      v-if="mapReady"
+      :objects="searchableObjects"
+      @object-selected="onObjectSelected"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import AddressSearch from '~/components/AddressSearch.vue'
+import ObjectSearch from '~/components/ObjectSearch.vue'
 
 const mapElement = ref(null)
 const mapReady = ref(false)
 const loadingMessage = ref('Инициализация...')
 const dadataToken = import.meta.env.VITE_DADATA_TOKEN
+const searchableObjects = ref([])
 
 const { $leaflet } = useNuxtApp()
 let L = null
@@ -244,6 +251,8 @@ async function loadPolygons() {
         console.error('Ошибка обработки полигона:', item.id, error)
       }
     })
+
+    updateSearchableObjects()
   } catch (error) {
     console.error('Ошибка загрузки полигонов:', error)
   }
@@ -296,6 +305,8 @@ async function loadPoints() {
         console.error('Ошибка обработки точки:', item.id, error)
       }
     })
+
+    updateSearchableObjects()
   } catch (error) {
     console.error('Ошибка загрузки точек:', error)
   }
@@ -335,6 +346,8 @@ async function loadPolygonsDone() {
         console.error('Ошибка обработки обработанного полигона:', item.id, error)
       }
     })
+
+    updateSearchableObjects()
   } catch (error) {
     console.error('Ошибка загрузки обработанных полигонов:', error)
   }
@@ -389,6 +402,8 @@ async function loadPointsDone() {
         console.error('Ошибка обработки обработанной точки:', item.id, error)
       }
     })
+
+    updateSearchableObjects()
   } catch (error) {
     console.error('Ошибка загрузки обработанных точек:', error)
   }
@@ -423,6 +438,98 @@ function onAddressSelected(addressData) {
   map.setView([lat, lng], 16, {
     animate: true
   })
+}
+
+function updateSearchableObjects() {
+  const objects = []
+
+  if (polygonLayer) {
+    polygonLayer.eachLayer((layer) => {
+      if (layer.feature && layer.feature.properties) {
+        const props = layer.feature.properties
+        objects.push({
+          id: props.id,
+          title: props.title || 'Без названия',
+          searchfield: props.searchfield,
+          typeLabel: 'Полигон в работе',
+          layer: layer,
+          layerGroup: polygonLayer,
+          type: 'polygon'
+        })
+      }
+    })
+  }
+
+  if (endpolygonLayer) {
+    endpolygonLayer.eachLayer((layer) => {
+      if (layer.feature && layer.feature.properties) {
+        const props = layer.feature.properties
+        objects.push({
+          id: props.id,
+          title: props.title || 'Без названия',
+          searchfield: props.searchfield,
+          typeLabel: 'Полигон обработан',
+          layer: layer,
+          layerGroup: endpolygonLayer,
+          type: 'polygon'
+        })
+      }
+    })
+  }
+
+  if (pointLayer) {
+    pointLayer.eachLayer((layer) => {
+      if (layer.feature && layer.feature.properties) {
+        const props = layer.feature.properties
+        objects.push({
+          id: props.id,
+          title: props.title || 'Без названия',
+          searchfield: props.searchfield,
+          typeLabel: 'Точка в работе',
+          layer: layer,
+          layerGroup: pointLayer,
+          type: 'point'
+        })
+      }
+    })
+  }
+
+  if (endpointLayer) {
+    endpointLayer.eachLayer((layer) => {
+      if (layer.feature && layer.feature.properties) {
+        const props = layer.feature.properties
+        objects.push({
+          id: props.id,
+          title: props.title || 'Без названия',
+          searchfield: props.searchfield,
+          typeLabel: 'Точка обработана',
+          layer: layer,
+          layerGroup: endpointLayer,
+          type: 'point'
+        })
+      }
+    })
+  }
+
+  searchableObjects.value = objects
+}
+
+function onObjectSelected(obj) {
+  if (!map || !obj.layer) return
+
+  if (!map.hasLayer(obj.layerGroup)) {
+    map.addLayer(obj.layerGroup)
+  }
+
+  if (obj.type === 'polygon') {
+    const bounds = obj.layer.getBounds()
+    map.fitBounds(bounds, { padding: [50, 50] })
+    obj.layer.openPopup()
+  } else if (obj.type === 'point') {
+    const latlng = obj.layer.getLatLng()
+    map.setView(latlng, 16, { animate: true })
+    obj.layer.openPopup()
+  }
 }
 
 if (process.client) {
