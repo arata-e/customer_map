@@ -7,9 +7,10 @@ export const useBitrix24 = () => {
   const POLYGON_TYPE_ID = 61
   const POINT_TYPE_ID = 65
 
-  const getGeoObjects = async (b24Instance, typeId = null, filter => {}) => {
+  const getGeoObjects = async (b24Instance, typeId = null, filter = {}) => {
     try {
       let f = typeId ? { "categoryId": typeId } : {}
+      f = {...f,...filter}
       const params ={
           "entityTypeId": SMART_PROCESS_ID,
           "filter": f
