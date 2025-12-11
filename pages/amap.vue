@@ -478,7 +478,7 @@ async function handleObjectCreate(e: any) {
 
     const newItemId = result.item.id
 
-    await b24Instance.slider.openPath(
+    b24Instance.slider.openPath(
       b24Instance.slider.getUrl(`/crm/type/139/details/${newItemId}/`)
     ).then(async (response: StatusClose) => {
       console.log('Slider response:', response)
@@ -653,7 +653,7 @@ async function openObjectInSlider(itemId: number) {
   map.closePopup()
 
   try {
-    return await b24Instance.slider.openPath(
+    b24Instance.slider.openPath(
       b24Instance.slider.getUrl(`/crm/type/139/details/${itemId}/`)
     ).then(async (response: StatusClose) => {
       console.log('Slider response:', response)
