@@ -584,17 +584,17 @@ async function openObjectInSlider(itemId) {
     return b24Instance.slider.openPath(
       b24Instance.slider.getUrl((`/crm/type/139/details/${itemId}/`))
       ).then((response: StatusClose) =>
-	{
-		$logger.warn(response)
-		if(
-			!response.isOpenAtNewWindow
-			&& response.isClose
-		)
-		{
-			$logger.info("Slider is closed! Reinit the application")
-			await refreshObjectOnMap(itemId)
-		}
-	})
+    	{
+    		$logger.warn(response)
+    		if(
+    			!response.isOpenAtNewWindow
+    			&& response.isClose
+    		)
+    		{
+    			$logger.info("Slider is closed! Reinit the application")
+    			await refreshObjectOnMap(itemId)
+    		}
+    	})
     
   } catch (error) {
     console.error('Ошибка при работе со слайдером:', error)
