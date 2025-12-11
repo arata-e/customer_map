@@ -576,7 +576,7 @@ function setupLayerContextMenu(layer, parentLayer) {
   })
 }
 
-async function openObjectInSlider(itemId: number) {
+async function (response: StatusClose) =>(itemId: number) {
   if (!b24Instance || !map) return
 
   map.closePopup()
