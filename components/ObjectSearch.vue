@@ -121,23 +121,23 @@ if (process.client) {
 <style scoped>
 .object-search {
   position: absolute;
-  top: 82px;
+  top: 76px;
   left: 10px;
   z-index: 1000;
 }
 
 .search-toggle-btn {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   background: white;
   border: 2px solid rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
 }
 
 .search-toggle-btn:hover {
