@@ -137,6 +137,8 @@ export const useBitrix24 = () => {
     getStages,
     getPolygons,
     getPoints,
+    getPolygonsDone,
+    getPointsDone,    
     createGeoObject,
     updateGeoObject,
     deleteGeoObject,
