@@ -38,30 +38,14 @@ export const useBitrix24 = () => {
     }
   }
 
-  const getPolygons2 = async (b24Instance) => {
-    try {
-      const params ={ 
-          "entityTypeId": SMART_PROCESS_ID,
-          "filter": { "categoryId": POLYGON_TYPE_ID }
-        }
-      let allItems = []
-      for await (const items of b24Instance.fetchListMethod('crm.item.list', params,'id','items')) {
-        allItems = allItems.concat(items)
-      }
-      return allItems
-    } catch (error) {
-      console.error('Ошибка получения геообъектов:', error)
-      return []
-    }
-  }
-
   const getPolygons = async (b24Instance) => {
     let f = {"!@stageId": ['DT139_61:SUCCESS', 'DT139_61:FAIL']}
     return await getGeoObjects(b24Instance, POLYGON_TYPE_ID, f)
   }
 
   const getPoints = async (b24Instance) => {
-    return await getGeoObjects(b24Instance, POINT_TYPE_ID)
+    let f = {"!@stageId": ['DT139_65:SUCCESS', 'DT139_65:FAIL']}
+    return await getGeoObjects(b24Instance, POINT_TYPE_ID, f)
   }
 
   const createGeoObject = async (b24Instance, data, typeId) => {
