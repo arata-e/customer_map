@@ -493,6 +493,57 @@ async function handleObjectCreate(e: any) {
   }
 }
 
+async function handleObjectEdit(e: any) {
+  if (!b24Instance || !map) return
+
+  const layers = e.layers || (e.layer ? [e.layer] : [])
+
+  for (const layer of layers) {
+    if (!layer.feature || !layer.feature.properties || !layer.feature.properties.id) {
+      console.log('Слой не имеет ID объекта, пропускаем')
+      continue
+    }
+
+    try {
+      const itemId = layer.feature.properties.id
+      let geometry = null
+
+      if (layer instanceof L.Marker) {
+        const latlng = layer.getLatLng()
+        geometry = {
+          type: 'Point',
+          coordinates: [latlng.lng, latlng.lat]
+        }
+      } else if (layer.getLatLngs) {
+        const latlngs = layer.getLatLngs()[0]
+        const coordinates = latlngs.map((latlng: any) => [latlng.lng, latlng.lat])
+        coordinates.push(coordinates[0])
+
+        geometry = {
+          type: 'Polygon',
+          coordinates: [coordinates]
+        }
+      } else {
+        console.error('Неподдерживаемый тип слоя для редактирования')
+        continue
+      }
+
+      const { updateGeoObject } = useBitrix24()
+
+      const data = {
+        ufCrm33_1705393860: JSON.stringify(geometry)
+      }
+
+      await updateGeoObject(b24Instance, itemId, data)
+      console.log('Геометрия объекта обновлена:', itemId)
+
+      layer.feature.geometry = geometry
+    } catch (error) {
+      console.error('Ошибка при обновлении объекта:', error)
+    }
+  }
+}
+
 function setupMapEvents() {
   map.on('pm:create', async (e) => {
     console.log('Создан объект:', e.shape, e.layer)
@@ -501,6 +552,7 @@ function setupMapEvents() {
 
   map.on('pm:edit', async (e) => {
     console.log('Изменен объект:', e.layer)
+    await handleObjectEdit(e)
   })
 
   map.on('pm:remove', async (e) => {
