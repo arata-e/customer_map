@@ -15,6 +15,10 @@
       :objects="searchableObjects"
       @object-selected="onObjectSelected"
     />
+    <ResetViewButton
+      v-if="mapReady"
+      @reset-view="resetMapView"
+    />
   </div>
 </template>
 
@@ -22,12 +26,16 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import AddressSearch from '~/components/AddressSearch.vue'
 import ObjectSearch from '~/components/ObjectSearch.vue'
+import ResetViewButton from '~/components/ResetViewButton.vue'
 
 const mapElement = ref(null)
 const mapReady = ref(false)
 const loadingMessage = ref('Инициализация...')
 const dadataToken = import.meta.env.VITE_DADATA_TOKEN
 const searchableObjects = ref([])
+
+const INITIAL_CENTER = [55.80205657605603, 37.75009144921874]
+const INITIAL_ZOOM = 9
 
 const { $leaflet } = useNuxtApp()
 let L = null
@@ -80,8 +88,8 @@ async function initializeMap() {
   if (!mapElement.value || !L) return
 
   map = L.map(mapElement.value, {
-    center: [55.80205657605603, 37.75009144921874],
-    zoom: 9
+    center: INITIAL_CENTER,
+    zoom: INITIAL_ZOOM
   })
 
   map.on('contextmenu', (e) => {
@@ -530,6 +538,15 @@ function onObjectSelected(obj) {
     map.setView(latlng, 16, { animate: true })
     obj.layer.openPopup()
   }
+}
+
+function resetMapView() {
+  if (!map) return
+
+  map.setView(INITIAL_CENTER, INITIAL_ZOOM, {
+    animate: true,
+    duration: 0.5
+  })
 }
 
 if (process.client) {
