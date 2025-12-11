@@ -33,6 +33,9 @@ let endpolygonLayer = null
 let pointLayer = null
 let endpointLayer = null
 
+let endpolygonLoaded = false
+let endpointLoaded = false
+
 onMounted(async () => {
   try {
     loadingMessage.value = 'Подключение к Bitrix24...'
@@ -165,9 +168,7 @@ async function initializeMap() {
   })
 
   polygonLayer.addTo(map)
-  endpolygonLayer.addTo(map)
   pointLayer.addTo(map)
-  endpointLayer.addTo(map)
 
   const baseLayers = {
     'Google Street': googleStreet,
@@ -183,6 +184,14 @@ async function initializeMap() {
   }
 
   L.control.layers(baseLayers, overlayLayers).addTo(map)
+
+  map.on('overlayadd', (e) => {
+    if (e.layer === endpolygonLayer && !endpolygonLoaded) {
+      loadPolygonsDone()
+    } else if (e.layer === endpointLayer && !endpointLoaded) {
+      loadPointsDone()
+    }
+  })
 
   map.pm.addControls({
     position: 'topleft',
@@ -204,14 +213,14 @@ async function initializeMap() {
 }
 
 async function loadPolygons() {
-  if (!b24Instance || !polygonLayer || !endpolygonLayer) return
+  if (!b24Instance || !polygonLayer) return
 
   try {
     loadingMessage.value = 'Загрузка полигонов...'
     const { getPolygons } = useBitrix24()
     const polygons = await getPolygons(b24Instance)
 
-    console.log('Загружено полигонов:', polygons.length)
+    console.log('Загружено полигонов в работе:', polygons.length)
 
     polygons.forEach(item => {
       if (!item.ufCrm33_1705393860) return
@@ -230,11 +239,7 @@ async function loadPolygons() {
           geometry: JSON.parse(item.ufCrm33_1705393860)
         }
 
-        if (item.stageId === 'DT139_61:SUCCESS' || item.stageId === 'DT139_61:FAIL') {
-          endpolygonLayer.addData(feature)
-        } else {
-          polygonLayer.addData(feature)
-        }
+        polygonLayer.addData(feature)
       } catch (error) {
         console.error('Ошибка обработки полигона:', item.id, error)
       }
@@ -245,14 +250,14 @@ async function loadPolygons() {
 }
 
 async function loadPoints() {
-  if (!b24Instance || !pointLayer || !endpointLayer) return
+  if (!b24Instance || !pointLayer) return
 
   try {
     loadingMessage.value = 'Загрузка точек...'
     const { getPoints } = useBitrix24()
     const points = await getPoints(b24Instance)
 
-    console.log('Загружено точек:', points.length)
+    console.log('Загружено точек в работе:', points.length)
 
     points.forEach(item => {
       if (!item.ufCrm33_1705393860) return
@@ -271,11 +276,7 @@ async function loadPoints() {
             </div>
           `
 
-          const markerOptions = item.stageId === 'DT139_65:SUCCESS' || item.stageId === 'DT139_65:FAIL'
-            ? { opacity: 0.5 }
-            : {}
-
-          const marker = L.marker([lat, lng], markerOptions)
+          const marker = L.marker([lat, lng])
           marker.bindPopup(popupContent)
 
           marker.feature = {
@@ -289,11 +290,7 @@ async function loadPoints() {
             }
           }
 
-          if (item.stageId === 'DT139_65:SUCCESS' || item.stageId === 'DT139_65:FAIL') {
-            endpointLayer.addLayer(marker)
-          } else {
-            pointLayer.addLayer(marker)
-          }
+          pointLayer.addLayer(marker)
         }
       } catch (error) {
         console.error('Ошибка обработки точки:', item.id, error)
@@ -301,6 +298,99 @@ async function loadPoints() {
     })
   } catch (error) {
     console.error('Ошибка загрузки точек:', error)
+  }
+}
+
+async function loadPolygonsDone() {
+  if (!b24Instance || !endpolygonLayer || endpolygonLoaded) return
+
+  endpolygonLoaded = true
+
+  try {
+    console.log('Загрузка обработанных полигонов...')
+    const { getPolygonsDone } = useBitrix24()
+    const polygons = await getPolygonsDone(b24Instance)
+
+    console.log('Загружено обработанных полигонов:', polygons.length)
+
+    polygons.forEach(item => {
+      if (!item.ufCrm33_1705393860) return
+
+      try {
+        const feature = {
+          type: 'Feature',
+          properties: {
+            title: item.title,
+            description: item.ufCrm33_1705393848,
+            id: item.id,
+            type: 'smart',
+            stageId: item.stageId,
+            searchfield: item.id + '-' + item.title
+          },
+          geometry: JSON.parse(item.ufCrm33_1705393860)
+        }
+
+        endpolygonLayer.addData(feature)
+      } catch (error) {
+        console.error('Ошибка обработки обработанного полигона:', item.id, error)
+      }
+    })
+  } catch (error) {
+    console.error('Ошибка загрузки обработанных полигонов:', error)
+  }
+}
+
+async function loadPointsDone() {
+  if (!b24Instance || !endpointLayer || endpointLoaded) return
+
+  endpointLoaded = true
+
+  try {
+    console.log('Загрузка обработанных точек...')
+    const { getPointsDone } = useBitrix24()
+    const points = await getPointsDone(b24Instance)
+
+    console.log('Загружено обработанных точек:', points.length)
+
+    points.forEach(item => {
+      if (!item.ufCrm33_1705393860) return
+
+      try {
+        const geometry = JSON.parse(item.ufCrm33_1705393860)
+
+        if (geometry.type === 'Point' && geometry.coordinates) {
+          const [lng, lat] = geometry.coordinates
+
+          const popupContent = `
+            <div>
+              <strong>${item.title || 'Без названия'}</strong><br>
+              ${item.ufCrm33_1705393848 || ''}<br>
+              <small>ID: ${item.id}</small>
+            </div>
+          `
+
+          const marker = L.marker([lat, lng], { opacity: 0.5 })
+          marker.bindPopup(popupContent)
+
+          marker.feature = {
+            properties: {
+              id: item.id,
+              title: item.title,
+              description: item.ufCrm33_1705393848,
+              type: 'smart',
+              stageId: item.stageId,
+              searchfield: item.id + '-' + item.title
+            }
+          }
+
+          endpointLayer.addLayer(marker)
+        }
+      } catch (error) {
+        console.error('Ошибка обработки обработанной точки:', item.id, error)
+      }
+    })
+  } catch (error) {
+    console.error('Ошибка загрузки обработанных точек:', error)
   }
 }
 
