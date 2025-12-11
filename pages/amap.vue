@@ -583,7 +583,7 @@ async function openObjectInSlider(itemId) {
   try {
     const sliderClosed = new Promise((resolve) => {
       b24Instance.slider.openPath(
-        `/crm/type/139/details/${itemId}/`,
+        b24Instance.slider.getUrl((`/crm/type/139/details/${itemId}/`),
         () => {
           resolve()
         }
