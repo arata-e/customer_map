@@ -56,6 +56,7 @@ export const useBitrix24 = () => {
   }
 
   const getPolygons = async (b24Instance) => {
+    let f = {"!@stageId": ['DT139_61:SUCCESS', 'DT139_61:FAIL']}
     return await getGeoObjects(b24Instance, POLYGON_TYPE_ID)
   }
 
