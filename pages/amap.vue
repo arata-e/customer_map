@@ -653,7 +653,7 @@ async function openObjectInSlider(itemId: number) {
   map.closePopup()
 
   try {
-    return b24Instance.slider.openPath(
+    return await b24Instance.slider.openPath(
       b24Instance.slider.getUrl(`/crm/type/139/details/${itemId}/`)
     ).then(async (response: StatusClose) => {
       console.log('Slider response:', response)
