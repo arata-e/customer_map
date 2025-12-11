@@ -36,7 +36,7 @@ export const useBitrix24 = () => {
     }
   }
 
-  const getPolygons = async (b24Instance) => {
+  const getPolygons2 = async (b24Instance) => {
     try {
       const params ={ 
           "entityTypeId": SMART_PROCESS_ID,
@@ -51,6 +51,10 @@ export const useBitrix24 = () => {
       console.error('Ошибка получения геообъектов:', error)
       return []
     }
+  }
+
+  const getPolygons = async (b24Instance) => {
+    return await getGeoObjects(b24Instance, POLYGON_TYPE_ID)
   }
 
   const getPoints = async (b24Instance) => {
