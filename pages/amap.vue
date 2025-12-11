@@ -35,7 +35,7 @@ const dadataToken = import.meta.env.VITE_DADATA_TOKEN
 const searchableObjects = ref([])
 
 const INITIAL_CENTER = [55.80205657605603, 37.75009144921874]
-const INITIAL_ZOOM = 9
+const INITIAL_ZOOM = 8
 
 const { $leaflet } = useNuxtApp()
 let L = null
