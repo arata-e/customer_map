@@ -68,8 +68,8 @@ export const useBitrix24 = () => {
       }
 
       const result = await b24Instance.callMethod('crm.item.add', params)
-      console.log(result)
-      return result.data
+      console.log(result._data.result)
+      return result._data.result
     } catch (error) {
       console.error('Ошибка создания геообъекта:', error)
       throw error
