@@ -462,6 +462,7 @@ async function handleObjectCreate(e: any) {
     }
 
     map.removeLayer(e.layer)
+    map.pm.disableDraw()
 
     const data = {
       title: title.trim(),
