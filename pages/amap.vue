@@ -5,6 +5,10 @@
       <p>{{ loadingMessage }}</p>
     </div>
     <div id="map" ref="mapElement" :style="{ opacity: mapReady ? 1 : 0 }"></div>
+    <div v-if="isEditing" class="editing-notification">
+      <span>Режим редактирования</span>
+      <button @click="finishEditingFromNotification" class="finish-btn">Завершить</button>
+    </div>
     <AddressSearch
       v-if="mapReady"
       :dadata-token="dadataToken"
@@ -34,6 +38,7 @@ const mapReady = ref(false)
 const loadingMessage = ref('Инициализация...')
 const dadataToken = import.meta.env.VITE_DADATA_TOKEN
 const searchableObjects = ref([])
+const isEditing = ref(false)
 
 const INITIAL_CENTER = [55.80205657605603, 37.75009144921874]
 const INITIAL_ZOOM = 8
@@ -51,6 +56,8 @@ let endpointLayer = null
 
 let endpolygonLoaded = false
 let endpointLoaded = false
+
+let currentEditingLayer = null
 
 onMounted(async () => {
   try {
@@ -629,21 +636,34 @@ function setupLayerContextMenu(layer, parentLayer) {
     if (!layer.feature || !layer.feature.properties) return
 
     const itemId = layer.feature.properties.id
+    const isEditing = currentEditingLayer && currentEditingLayer._leaflet_id === layer._leaflet_id
+
+    let buttonsHtml = `
+      <button onclick="window.openObjectInSlider(${itemId})"
+              style="display: block; width: 100%; padding: 8px; margin-bottom: 4px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 4px;">
+        Открыть
+      </button>
+    `
+
+    if (isEditing) {
+      buttonsHtml += `
+        <button onclick="window.finishEditingGeometry()"
+                style="display: block; width: 100%; padding: 8px; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 4px;">
+          Завершить редактирование
+        </button>
+      `
+    } else {
+      buttonsHtml += `
+        <button onclick="window.editLayerGeometry('${layer._leaflet_id}')"
+                style="display: block; width: 100%; padding: 8px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">
+          Редактировать
+        </button>
+      `
+    }
 
     const popup = L.popup()
       .setLatLng(e.latlng)
-      .setContent(`
-        <div style="text-align: center;">
-          <button onclick="window.openObjectInSlider(${itemId})"
-                  style="display: block; width: 100%; padding: 8px; margin-bottom: 4px; cursor: pointer; background: #0066cc; color: white; border: none; border-radius: 4px;">
-            Открыть
-          </button>
-          <button onclick="window.editLayerGeometry('${layer._leaflet_id}')"
-                  style="display: block; width: 100%; padding: 8px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px;">
-            Редактировать
-          </button>
-        </div>
-      `)
+      .setContent(`<div style="text-align: center;">${buttonsHtml}</div>`)
       .openOn(map)
   })
 }
@@ -673,6 +693,11 @@ function editLayerGeometry(layerId: string) {
 
   map.closePopup()
 
+  if (currentEditingLayer) {
+    console.log('Уже редактируется другой слой')
+    return
+  }
+
   const allLayers = [polygonLayer, endpolygonLayer, pointLayer, endpointLayer]
   let targetLayer = null
 
@@ -695,18 +720,36 @@ function editLayerGeometry(layerId: string) {
   }
 
   if (targetLayer.pm) {
+    currentEditingLayer = targetLayer
+    isEditing.value = true
     targetLayer.pm.enable({
       allowSelfIntersection: false,
       snappable: true,
       snapDistance: 20
     })
-
-    targetLayer.once('pm:edit', async (e: any) => {
-      console.log('Редактирование завершено')
-      await handleLayerEdit(targetLayer)
-      targetLayer.pm.disable()
-    })
+    console.log('Режим редактирования включен. Кликните правой кнопкой для завершения.')
   }
+}
+
+async function finishEditingGeometry() {
+  if (!currentEditingLayer || !map) return
+
+  map.closePopup()
+
+  try {
+    await handleLayerEdit(currentEditingLayer)
+    currentEditingLayer.pm.disable()
+    console.log('Редактирование завершено и изменения сохранены')
+  } catch (error) {
+    console.error('Ошибка при завершении редактирования:', error)
+  } finally {
+    currentEditingLayer = null
+    isEditing.value = false
+  }
+}
+
+function finishEditingFromNotification() {
+  finishEditingGeometry()
 }
 
 async function handleLayerEdit(layer: any) {
@@ -860,6 +903,7 @@ function removeObjectFromAllLayers(itemId: number) {
 if (process.client) {
   window.openObjectInSlider = openObjectInSlider
   window.editLayerGeometry = editLayerGeometry
+  window.finishEditingGeometry = finishEditingGeometry
   window.createPointAtLocation = (lat, lng) => {
     console.log('Создать точку в координатах:', lat, lng)
     if (map) map.closePopup()
@@ -964,5 +1008,38 @@ onUnmounted(() => {
 .loading p {
   color: #666;
   font-size: 14px;
+}
+
+.editing-notification {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #28a745;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.editing-notification .finish-btn {
+  background: white;
+  color: #28a745;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.editing-notification .finish-btn:hover {
+  background: #f0f0f0;
 }
 </style>
