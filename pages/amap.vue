@@ -201,7 +201,7 @@ async function initializeMap() {
   })
 
   map.pm.addControls({
-    position: 'topleft',
+    position: 'bottomleft',
     drawMarker: true,
     drawPolygon: true,
     drawPolyline: false,
