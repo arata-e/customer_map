@@ -22,12 +22,12 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import AddressSearch from '~/components/AddressSearch.vue'
 import ObjectSearch from '~/components/ObjectSearch.vue'
 import ResetViewButton from '~/components/ResetViewButton.vue'
-import {Result, StatusClose} from '@bitrix24/b24jssdk'
+import { StatusClose } from '@bitrix24/b24jssdk'
   
 const mapElement = ref(null)
 const mapReady = ref(false)
@@ -576,33 +576,27 @@ function setupLayerContextMenu(layer, parentLayer) {
   })
 }
 
-async function openObjectInSlider(itemId) {
+async function openObjectInSlider(itemId: number) {
   if (!b24Instance || !map) return
 
   map.closePopup()
 
   try {
     return b24Instance.slider.openPath(
-      b24Instance.slider.getUrl((`/crm/type/139/details/${itemId}/`))
-      ).then((response: StatusClose) =>
-    	{
-    		$logger.warn(response)
-    		if(
-    			!response.isOpenAtNewWindow
-    			&& response.isClose
-    		)
-    		{
-    			$logger.info("Slider is closed! Reinit the application")
-    			await refreshObjectOnMap(itemId)
-    		}
-    	})
-    
+      b24Instance.slider.getUrl(`/crm/type/139/details/${itemId}/`)
+    ).then(async (response: StatusClose) => {
+      console.log('Slider response:', response)
+      if (!response.isOpenAtNewWindow && response.isClose) {
+        console.log('Slider is closed! Refreshing object on map')
+        await refreshObjectOnMap(itemId)
+      }
+    })
   } catch (error) {
     console.error('Ошибка при работе со слайдером:', error)
   }
 }
 
-async function refreshObjectOnMap(itemId) {
+async function refreshObjectOnMap(itemId: number) {
   console.log("refresh for item :", itemId)
   const { getItem, POLYGON_TYPE_ID, POINT_TYPE_ID } = useBitrix24()
 
@@ -693,7 +687,7 @@ async function refreshObjectOnMap(itemId) {
   }
 }
 
-function removeObjectFromAllLayers(itemId) {
+function removeObjectFromAllLayers(itemId: number) {
   const layers = [polygonLayer, endpolygonLayer, pointLayer, endpointLayer]
 
   layers.forEach(layer => {
