@@ -672,15 +672,12 @@ async function refreshObjectOnMap(itemId: number) {
   const { getItem, POLYGON_TYPE_ID, POINT_TYPE_ID } = useBitrix24()
 
   try {
+    removeObjectFromAllLayers(itemId)
     const item = await getItem(b24Instance, itemId)
-
     if (!item) {
       console.error('Объект не найден:', itemId)
       return
     }
-
-    removeObjectFromAllLayers(itemId)
-
     const isPolygon = item.categoryId === POLYGON_TYPE_ID
     const isPoint = item.categoryId === POINT_TYPE_ID
 
